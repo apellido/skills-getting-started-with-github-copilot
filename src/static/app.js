@@ -20,6 +20,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const spotsLeft = details.max_participants - details.participants.length;
 
+
         activityCard.innerHTML = `
           <h4>${name}</h4>
           <p>${details.description}</p>
@@ -35,7 +36,34 @@ document.addEventListener("DOMContentLoaded", () => {
         if (details.participants.length > 0) {
           details.participants.forEach(email => {
             const li = document.createElement('li');
-            li.textContent = email;
+            li.className = 'participant-item';
+            // Add email span
+            const emailSpan = document.createElement('span');
+            emailSpan.textContent = email;
+            // Add delete icon
+            const deleteBtn = document.createElement('span');
+            deleteBtn.className = 'delete-participant';
+            deleteBtn.title = 'Remove participant';
+            deleteBtn.innerHTML = '&times;';
+            deleteBtn.addEventListener('click', async (e) => {
+              e.stopPropagation();
+              try {
+                const response = await fetch(`/activities/${encodeURIComponent(name)}/signup?email=${encodeURIComponent(email)}`, {
+                  method: 'DELETE',
+                });
+                if (response.ok) {
+                  // Refresh activities list
+                  fetchActivities();
+                } else {
+                  const result = await response.json();
+                  alert(result.detail || 'Failed to remove participant.');
+                }
+              } catch (error) {
+                alert('Failed to remove participant.');
+              }
+            });
+            li.appendChild(emailSpan);
+            li.appendChild(deleteBtn);
             participantsList.appendChild(li);
           });
         } else {
