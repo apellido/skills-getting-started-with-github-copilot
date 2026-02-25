@@ -20,12 +20,57 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const spotsLeft = details.max_participants - details.participants.length;
 
+
         activityCard.innerHTML = `
           <h4>${name}</h4>
           <p>${details.description}</p>
           <p><strong>Schedule:</strong> ${details.schedule}</p>
           <p><strong>Availability:</strong> ${spotsLeft} spots left</p>
+          <div class="participants-section">
+            <p><strong>Participants:</strong></p>
+            <ul class="participants-list"></ul>
+          </div>
         `;
+
+        const participantsList = activityCard.querySelector('.participants-list');
+        if (details.participants.length > 0) {
+          details.participants.forEach(email => {
+            const li = document.createElement('li');
+            li.className = 'participant-item';
+            // Add email span
+            const emailSpan = document.createElement('span');
+            emailSpan.textContent = email;
+            // Add delete icon
+            const deleteBtn = document.createElement('span');
+            deleteBtn.className = 'delete-participant';
+            deleteBtn.title = 'Remove participant';
+            deleteBtn.innerHTML = '&times;';
+            deleteBtn.addEventListener('click', async (e) => {
+              e.stopPropagation();
+              try {
+                const response = await fetch(`/activities/${encodeURIComponent(name)}/signup?email=${encodeURIComponent(email)}`, {
+                  method: 'DELETE',
+                });
+                if (response.ok) {
+                  // Refresh activities list
+                  fetchActivities();
+                } else {
+                  const result = await response.json();
+                  alert(result.detail || 'Failed to remove participant.');
+                }
+              } catch (error) {
+                alert('Failed to remove participant.');
+              }
+            });
+            li.appendChild(emailSpan);
+            li.appendChild(deleteBtn);
+            participantsList.appendChild(li);
+          });
+        } else {
+          const li = document.createElement('li');
+          li.textContent = 'No participants yet';
+          participantsList.appendChild(li);
+        }
 
         activitiesList.appendChild(activityCard);
 
